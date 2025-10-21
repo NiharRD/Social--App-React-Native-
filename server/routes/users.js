@@ -72,4 +72,88 @@ router.get("/getUser/:id", async (req, res) => {
   }
 });
 
+// follow user
+
+router.put("/follow/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ _id: id });
+    const currentUser = await User.findOne({ _id: req.body.id });
+
+    let isFollowed = false;
+    user.followers.map((item) => {
+      if (item.toString() === currentUser._id.toString()) isFollowed = true;
+    });
+    if (isFollowed) {
+      const res1 = await User.findOneAndUpdate(
+        { _id: id },
+        { $pull: { followers: currentUser._id } },
+        { new: true }
+      );
+      const res2 = await User.findOneAndUpdate(
+        { _id: currentUser._id },
+        { $pull: { following: user._id } },
+        { new: true }
+      );
+      res
+        .status(200)
+        .json({ message: "User unfollowed successfully", status: true });
+    } else {
+      const res1 = await User.findOneAndUpdate(
+        { _id: id },
+        { $push: { followers: currentUser._id } },
+        { new: true }
+      );
+      const res2 = await User.findOneAndUpdate(
+        { _id: currentUser._id },
+        { $push: { following: user._id } },
+        { new: true }
+      );
+      res.status(200).json({
+        message: "User followed successfully",
+        status: true,
+        data: res1,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
+// unfollow user
+
+router.put("/unfollow/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ _id: id });
+    const currentUser = await User.findOne({ _id: req.body.id });
+
+    let isFollowing = false;
+    user.followers.map((item) => {
+      if (item.toString() === currentUser._id.toString()) isFollowing = true;
+    });
+    if (!isFollowing) {
+      res.status(200).json({ message: "User not following", status: false });
+    } else {
+      const res1 = await User.findOneAndUpdate(
+        { _id: id },
+        { $pull: { followers: currentUser._id } },
+        { new: true }
+      );
+      const res2 = await User.findOneAndUpdate(
+        { _id: currentUser._id },
+        { $pull: { following: user._id } },
+        { new: true }
+      );
+      res.status(200).json({
+        message: "User unfollowed successfully",
+        status: true,
+        data: res1,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
 module.exports = router;

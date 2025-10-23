@@ -2,11 +2,14 @@ const express = require("express");
 const router = express.Router();
 const Post = require("../models/post");
 const User = require("../models/user");
+const upload = require("../middleware/upload");
 //add posts
 
-router.post("/add", async (req, res) => {
+router.post("/add", upload.single("imageUrl"), async (req, res) => {
   try {
-    const { caption, userId, userName, imageUrl } = req.body;
+    const imageUrl = req.file ? req.file.filename : "";
+    const { caption, userId, userName } = req.body;
+
     const newPost = await Post.create({ caption, userId, userName, imageUrl });
     res.status(201).json({
       message: "Post added successfully",

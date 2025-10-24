@@ -3,28 +3,43 @@ const router = express.Router();
 const Post = require("../models/post");
 const User = require("../models/user");
 const upload = require("../middleware/upload");
+const verifyToken = require("../middleware/auth");
 //add posts
 
-router.post("/add", upload.single("imageUrl"), async (req, res) => {
-  try {
-    const imageUrl = req.file ? req.file.filename : "";
-    const { caption, userId, userName } = req.body;
+router.post(
+  "/add",
+  upload.single("imageUrl"),
+  verifyToken,
+  async (req, res) => {
+    try {
+      const imageUrl = req.file ? req.file.filename : "";
+      const { caption, userName } = req.body;
+      const userId = req.userId;
 
-    const newPost = await Post.create({ caption, userId, userName, imageUrl });
-    res.status(201).json({
-      message: "Post added successfully",
-      status: true,
-      data: newPost,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message, status: false });
+      const newPost = await Post.create({
+        caption,
+        userId,
+        userName,
+        imageUrl,
+      });
+      res.status(201).json({
+        message: "Post added successfully",
+        status: true,
+        data: newPost,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message, status: false });
+    }
   }
-});
+);
 
 // update post
 
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
   try {
     const updatedPost = await Post.findByIdAndUpdate(
       id,
@@ -43,8 +58,12 @@ router.put("/update/:id", async (req, res) => {
 
 // delete posts
 
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
+
   const post = await Post.findById(id);
   if (!post) {
     return res.status(404).json({ message: "Post not found", status: false });
@@ -115,10 +134,13 @@ router.get("/getPostByUser/:userId", async (req, res) => {
 
 // like post
 
-router.put("/like/:id", async (req, res) => {
+router.put("/like/:id", verifyToken, async (req, res) => {
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
   try {
     const post = await Post.findOne({ _id: req.params.id });
-    const currentUser = await User.findOne({ _id: req.body.id });
+    const currentUser = await User.findOne({ _id: req.userId });
     let isLiked = false;
     post.likes.map((item) => {
       if (item.toString() === currentUser._id.toString()) isLiked = true;

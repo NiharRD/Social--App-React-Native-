@@ -2,9 +2,13 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const verifyToken = require("../middleware/auth");
 // update
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
 
   try {
     if (req.body.password) {
@@ -26,8 +30,11 @@ router.put("/update/:id", async (req, res) => {
 
 //delete user
 
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
   const UserExists = await User.findById(id);
   if (UserExists) {
     await User.findByIdAndDelete(id).then(() => {
@@ -74,11 +81,11 @@ router.get("/getUser/:id", async (req, res) => {
 
 // follow user
 
-router.put("/follow/:id", async (req, res) => {
+router.put("/follow/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ _id: id });
-    const currentUser = await User.findOne({ _id: req.body.id });
+    const currentUser = await User.findOne({ _id: req.userId });
 
     let isFollowed = false;
     user.followers.map((item) => {
@@ -122,11 +129,11 @@ router.put("/follow/:id", async (req, res) => {
 
 // unfollow user
 
-router.put("/unfollow/:id", async (req, res) => {
+router.put("/unfollow/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ _id: id });
-    const currentUser = await User.findOne({ _id: req.body.id });
+    const currentUser = await User.findOne({ _id: req.userId });
 
     let isFollowing = false;
     user.followers.map((item) => {

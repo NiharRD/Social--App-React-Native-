@@ -37,10 +37,14 @@ router.post(
 
 router.put("/update/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  if (req.userId !== id) {
-    return res.status(401).json({ message: "unauthorized", status: false });
-  }
+
   try {
+    const user = await User.findById(req.userId);
+    const post = await Post.findById(id);
+    if (!post || post.userId.toString() !== user._id.toString()) {
+      return res.status(401).json({ message: "unauthorized", status: false });
+    }
+
     const updatedPost = await Post.findByIdAndUpdate(
       id,
       { $set: req.body },
@@ -60,15 +64,17 @@ router.put("/update/:id", verifyToken, async (req, res) => {
 
 router.delete("/delete/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  if (req.userId !== id) {
-    return res.status(401).json({ message: "unauthorized", status: false });
-  }
 
   const post = await Post.findById(id);
   if (!post) {
     return res.status(404).json({ message: "Post not found", status: false });
   }
   try {
+    const user = await User.findById(req.userId);
+    const post = await Post.findById(id);
+    if (!post || post.userId.toString() !== user._id.toString()) {
+      return res.status(401).json({ message: "unauthorized", status: false });
+    }
     await Post.findByIdAndDelete(id);
     res
       .status(200)
@@ -135,12 +141,12 @@ router.get("/getPostByUser/:userId", async (req, res) => {
 // like post
 
 router.put("/like/:id", verifyToken, async (req, res) => {
-  if (req.userId !== id) {
-    return res.status(401).json({ message: "unauthorized", status: false });
-  }
   try {
     const post = await Post.findOne({ _id: req.params.id });
     const currentUser = await User.findOne({ _id: req.userId });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found", status: false });
+    }
     let isLiked = false;
     post.likes.map((item) => {
       if (item.toString() === currentUser._id.toString()) isLiked = true;

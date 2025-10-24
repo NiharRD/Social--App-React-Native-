@@ -1,0 +1,57 @@
+[{
+  "_id": {
+    "$oid": "68f5e5c08657d7daa786ae12"
+  },
+  "caption": "helooo my first posts",
+  "userId": "68f49357d881b60218cba982",
+  "userName": "vipul",
+  "likes": [
+    {
+      "$oid": "68f722f2f6faaa0162235296"
+    }
+  ],
+  "comments": [],
+  "createdAt": {
+    "$date": "2025-10-20T07:33:20.480Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-21T06:58:54.752Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68f9d7fec5e4c352f804e6bb"
+  },
+  "caption": "helooo my first posts vwith file ",
+  "userId": "68f49357d881b60218cba982",
+  "userName": "vipul",
+  "imageUrl": "uploads\\1761204222589.png",
+  "likes": [],
+  "comments": [],
+  "createdAt": {
+    "$date": "2025-10-23T07:23:42.599Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-23T07:23:42.599Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68f9d862c8febb0ad775594c"
+  },
+  "caption": "helooo my second posts vwith file ",
+  "userId": "68f49357d881b60218cba982",
+  "userName": "vipul",
+  "imageUrl": "1761204322798.png",
+  "likes": [],
+  "comments": [],
+  "createdAt": {
+    "$date": "2025-10-23T07:25:22.807Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-23T07:25:22.807Z"
+  },
+  "__v": 0
+}]

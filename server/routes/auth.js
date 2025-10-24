@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 //Bcrypt is a password hashing library used in Express.js applications to securely store
 // user passwords by converting them into irreversible hash strings, protecting them from unauthorized access even
 // if the database is compromised

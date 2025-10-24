@@ -1,0 +1,16 @@
+[{
+  "_id": {
+    "$oid": "68f9cd27462f250c3d75b03f"
+  },
+  "comment": " updated  comment",
+  "userId": "68f722f2f6faaa0162235296",
+  "userName": "nihar",
+  "postId": "68f5e5c08657d7daa786ae12",
+  "createdAt": {
+    "$date": "2025-10-23T06:37:27.568Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-23T06:59:57.803Z"
+  },
+  "__v": 0
+}]

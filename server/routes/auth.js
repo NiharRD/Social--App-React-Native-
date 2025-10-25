@@ -36,7 +36,7 @@ router.post("/login", async (req, res) => {
   const { emailId } = req.body;
   try {
     const user = await User.findOne({ emailId });
-    !user && res.status(200).json({ message: "User not found", status: false });
+    !user && res.status(404).json({ message: "User not found", status: false });
 
     if (user) {
       const ValidPassword = await bcrypt.compare(
@@ -60,7 +60,7 @@ router.post("/login", async (req, res) => {
           data: userResponse,
         });
       } else {
-        res.status(200).json({ message: "Invalid password", status: false });
+        res.status(401).json({ message: "Invalid password", status: false });
       }
     }
   } catch (error) {

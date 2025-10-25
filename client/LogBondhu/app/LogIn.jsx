@@ -35,20 +35,21 @@ const LogIn = () => {
     }
 
     // Here you would typically make an API call to authenticate the user
+    const API_BASE_URL = "http://10.0.2.2:8080";
+
     console.log("Login Data:", formData);
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
-        {
-          emailId: formData.email,
-          password: formData.password,
-        }
-      );
+      const response = await axios.post("http://10.0.2.2:8080/api/auth/login", {
+        emailId: formData.email,
+        password: formData.password,
+      });
       if (response.status === 200) {
         Alert.alert("Success", "Logged in successfully!");
+        console.log(response.data);
+        console.log("token", response.data.token);
         router.navigate("/Dashboard");
       } else {
-        Alert.alert("Error", response.data.message);
+        Alert.alert("Error", "Invalid email or password");
       }
     } catch (error) {
       Alert.alert("Error", error.message);

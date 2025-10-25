@@ -31,6 +31,7 @@ const SignUp = () => {
       [field]: value,
     }));
   };
+  const API_BASE_URL = "http://10.0.2.2:8080";
 
   const handleSubmit = async () => {
     // Basic validation
@@ -49,7 +50,7 @@ const SignUp = () => {
     // Here you would typically make an API call to register the user
     console.log("Form Data:", formData);
     const response = await axios.post(
-      "http://localhost:8080/api/auth/register",
+      "http://10.0.2.2:8080/api/auth/register",
       {
         userName: formData.userName,
         emailId: formData.emailId,

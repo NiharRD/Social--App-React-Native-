@@ -12,9 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";
-
+import { useAuth } from "../utils/authContext";
 const LogIn = () => {
+  const { login } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -28,12 +28,6 @@ const LogIn = () => {
     }));
   };
 
-  async function saveToken(token) {
-    await SecureStore.setItemAsync("jwt_token", token);
-  }
-  async function getToken() {
-    return await SecureStore.getItemAsync("jwt_token");
-  }
   const handleSubmit = async () => {
     // Basic validation
     if (!formData.email || !formData.password) {
@@ -54,20 +48,12 @@ const LogIn = () => {
         Alert.alert("Success", "Logged in successfully!");
         console.log(response.data);
         console.log("token", response.data.token);
-        await saveToken(response.data.token);
-        const token = await getToken();
-        console.log("token saved in secure store", token);
-        console.log("token saved");
-        router.navigate("/Dashboard");
+        await login(response.data.token);
+        router.replace("/(tabs)");
       } else {
         Alert.alert("Error", "Invalid email or password");
       }
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    }
-    Alert.alert("Success", "Logged in successfully!");
-    // Navigate to main app or dashboard
-    // router.navigate("/Dashboard");
+    } catch (error) {}
   };
 
   return (

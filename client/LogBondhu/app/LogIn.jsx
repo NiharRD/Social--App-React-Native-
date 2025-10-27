@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
 const LogIn = () => {
   const router = useRouter();
@@ -27,6 +28,12 @@ const LogIn = () => {
     }));
   };
 
+  async function saveToken(token) {
+    await SecureStore.setItemAsync("jwt_token", token);
+  }
+  async function getToken() {
+    return await SecureStore.getItemAsync("jwt_token");
+  }
   const handleSubmit = async () => {
     // Basic validation
     if (!formData.email || !formData.password) {
@@ -47,6 +54,10 @@ const LogIn = () => {
         Alert.alert("Success", "Logged in successfully!");
         console.log(response.data);
         console.log("token", response.data.token);
+        await saveToken(response.data.token);
+        const token = await getToken();
+        console.log("token saved in secure store", token);
+        console.log("token saved");
         router.navigate("/Dashboard");
       } else {
         Alert.alert("Error", "Invalid email or password");
@@ -67,7 +78,6 @@ const LogIn = () => {
         style={styles.gradient}
       >
         <View style={styles.content}>
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
@@ -81,9 +91,7 @@ const LogIn = () => {
             </Text>
           </View>
 
-          {/* Form */}
           <View style={styles.form}>
-            {/* Email Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
               <TextInput
@@ -112,9 +120,6 @@ const LogIn = () => {
               />
             </View>
 
-            {/* Forgot Password Link */}
-
-            {/* Submit Button */}
             <TouchableOpacity
               style={styles.submitButton}
               onPress={handleSubmit}
@@ -122,14 +127,12 @@ const LogIn = () => {
               <Text style={styles.submitButtonText}>Sign In</Text>
             </TouchableOpacity>
 
-            {/* Divider */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Sign Up Link */}
             <View style={styles.signupLink}>
               <Text style={styles.signupText}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => router.navigate("/SignUp")}>

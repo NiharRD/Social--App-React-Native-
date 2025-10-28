@@ -45,7 +45,7 @@ const LogIn = () => {
         password: formData.password,
       });
       if (response.status === 200) {
-        Alert.alert("Success", "Logged in successfully!");
+        //  Alert.alert("Success", "Logged in successfully!");
         console.log(response.data);
         console.log("token", response.data.token);
         await login(response.data.token);

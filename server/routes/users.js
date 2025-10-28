@@ -163,4 +163,21 @@ router.put("/unfollow/:id", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/getOwnProfile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.userId });
+    if (user) {
+      res.status(200).json({
+        message: "User fetched successfully",
+        status: true,
+        data: user,
+      });
+    } else {
+      res.status(404).json({ message: "User not found", status: false });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
 module.exports = router;

@@ -7,7 +7,7 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [userData, setUserData] = useState(null);
   // Load token once on app start
   useEffect(() => {
     loadToken();
@@ -24,13 +24,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (newToken) => {
+  const login = async (newToken, newUserData) => {
     await SecureStore.setItemAsync("jwt_token", newToken);
     setToken(newToken);
   };
 
   const logout = async () => {
     await SecureStore.deleteItemAsync("jwt_token");
+
     setToken(null);
   };
 
@@ -39,7 +40,15 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, token, login, logout, isLoading }}
+      value={{
+        isLoggedIn,
+        token,
+        login,
+        logout,
+        isLoading,
+        userData,
+        setUserData,
+      }}
     >
       {children}
     </AuthContext.Provider>

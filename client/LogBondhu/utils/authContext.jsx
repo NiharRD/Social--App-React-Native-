@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState(null);
-  // Load token once on app start
   useEffect(() => {
     loadToken();
   }, []);
@@ -35,7 +34,6 @@ export function AuthProvider({ children }) {
     setToken(null);
   };
 
-  // Derive isLoggedIn from token - no separate state needed!
   const isLoggedIn = token !== null;
 
   return (

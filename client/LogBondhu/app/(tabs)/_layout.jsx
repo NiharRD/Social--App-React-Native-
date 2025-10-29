@@ -26,7 +26,25 @@ const _layout = () => {
   }, [token]);
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#3b82f6",
+        tabBarInactiveTintColor: "#64748b",
+        tabBarStyle: {
+          backgroundColor: "#0f172a",
+          borderTopColor: "#1e293b",
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -42,7 +60,7 @@ const _layout = () => {
         options={{
           title: "Upload",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="upload" color={color} size={size} />
+            <Feather name="plus-circle" color={color} size={size} />
           ),
         }}
       />

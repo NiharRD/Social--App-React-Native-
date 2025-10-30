@@ -13,8 +13,15 @@ router.post(
   async (req, res) => {
     try {
       const imageUrl = req.file ? req.file.filename : "";
-      const { caption, userName } = req.body;
+      const { caption } = req.body;
       const userId = req.userId;
+      const user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "User not found", status: false });
+      }
+      const userName = user.userName;
 
       const newPost = await Post.create({
         caption,

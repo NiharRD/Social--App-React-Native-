@@ -6,17 +6,100 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
-
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
+import { useAuth } from "../../utils/authContext";
 const Upload = () => {
   const router = useRouter();
   const [caption, setCaption] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const uploadPost = async () => {
+    if (caption && selectedImage) {
+      try {
+        setLoading(true);
+        // Create FormData
+        const formData = new FormData();
+        formData.append("caption", caption);
+
+        // Extract filename from URI and create file object
+        const filename = selectedImage.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append("imageUrl", {
+          uri: selectedImage,
+          name: filename,
+          type: type,
+        });
+
+        const response = await axios.post(
+          "http://10.0.2.2:8080/api/posts/add",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        setLoading(false);
+
+        if (response.data.status) {
+          Alert.alert("Success", "Post uploaded successfully!");
+          setCaption("");
+          setSelectedImage(null);
+        } else {
+          Alert.alert("Error", response.data.message);
+        }
+      } catch (error) {
+        setLoading(false);
+        Alert.alert(
+          "Error",
+          error.response?.data?.message || "Failed to upload post"
+        );
+      }
+    } else {
+      Alert.alert("Error", "Please fill all the fields");
+    }
+  };
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+  const PickImageCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false, // set true to allow simple crop UI
+      quality: 1, // 0..1 compression (iOS/Android)
+      mediaTypes: ["images"], // or ImagePicker.MediaTypeOptions.Images
+    });
+    console.log(result); // file in results.uri
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,7 +120,13 @@ const Upload = () => {
             <Text style={styles.backButtonText}>Clear</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>AddPost</Text>
-          <View style={styles.placeholder} />
+          <TouchableOpacity style={styles.postButton} onPress={uploadPost}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#3b82f6" />
+            ) : (
+              <Text style={styles.postButtonText}>Post</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -60,7 +149,10 @@ const Upload = () => {
           </View>
 
           {/* Open Camera Button */}
-          <TouchableOpacity style={styles.optionButton}>
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={PickImageCamera}
+          >
             <View style={styles.optionContent}>
               <View style={styles.iconContainer}>
                 <Feather name="camera" size={24} color="#64748b" />
@@ -70,7 +162,7 @@ const Upload = () => {
           </TouchableOpacity>
 
           {/* Open Gallery Button */}
-          <TouchableOpacity style={styles.optionButton}>
+          <TouchableOpacity style={styles.optionButton} onPress={pickImage}>
             <View style={styles.optionContent}>
               <View style={styles.iconContainer}>
                 <Feather name="image" size={24} color="#64748b" />
@@ -79,10 +171,15 @@ const Upload = () => {
             </View>
           </TouchableOpacity>
 
-          {/* Selected Image Preview Placeholder */}
+          {/* Selected Image Preview */}
           {selectedImage && (
             <View style={styles.imagePreviewContainer}>
-              <Text style={styles.previewText}>Image Preview</Text>
+              <Text style={styles.previewLabel}>Selected Image</Text>
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
             </View>
           )}
         </ScrollView>
@@ -124,8 +221,13 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     textAlign: "center",
   },
-  placeholder: {
-    width: 50,
+  postButton: {
+    paddingVertical: 4,
+  },
+  postButtonText: {
+    color: "#3b82f6",
+    fontSize: 16,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
@@ -182,10 +284,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderWidth: 1,
     borderColor: "#334155",
-    alignItems: "center",
   },
-  previewText: {
-    color: "#64748b",
-    fontSize: 14,
+  previewLabel: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  previewImage: {
+    width: "100%",
+    height: 300,
+    borderRadius: 8,
+    backgroundColor: "#0f172a",
   },
 });

@@ -8,12 +8,13 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
 import PostCard from "../../../components/posts/PostCard";
+import { useFocusEffect } from "expo-router";
 
 const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
@@ -30,9 +31,11 @@ const HomeScreen = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
 
   if (loading) {
     return (

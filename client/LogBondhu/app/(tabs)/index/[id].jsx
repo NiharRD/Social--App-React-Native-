@@ -20,6 +20,7 @@ const PostDetails = () => {
   const router = useRouter();
   const [post, setPost] = useState(null);
   const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState([]);
 
   const fetchPost = async () => {
     const response = await axios.get(
@@ -27,9 +28,16 @@ const PostDetails = () => {
     );
     setPost(response.data.data);
   };
+  const fetchComments = async () => {
+    const response = await axios.get(
+      `http://10.0.2.2:8080/api/posts/comments/getByPost/${id}`
+    );
+    setComments(response.data.data);
+  };
 
   useEffect(() => {
     fetchPost();
+    fetchComments();
   }, []);
 
   // Format time
@@ -140,7 +148,7 @@ const PostDetails = () => {
           {/* Comments Section */}
           <View style={styles.commentsSection}>
             <Text style={styles.sectionTitle}>
-              Comments ({post.comments?.length || 0})
+              Comments ({comments.length || 0})
             </Text>
 
             {/* Comment Input */}
@@ -164,10 +172,10 @@ const PostDetails = () => {
             </View>
 
             {/* Comments List */}
-            {post.comments && post.comments.length > 0 ? (
+            {comments && comments.length > 0 ? (
               <View style={styles.commentsList}>
-                {post.comments.map((comment, index) => (
-                  <View key={index} style={styles.commentItem}>
+                {comments.map((comment, index) => (
+                  <View key={comment._id || index} style={styles.commentItem}>
                     <View style={styles.commentAvatar}>
                       <Feather name="user" size={14} color="#64748b" />
                     </View>
@@ -176,10 +184,14 @@ const PostDetails = () => {
                         <Text style={styles.commentAuthor}>
                           {comment.userName || "User"}
                         </Text>
-                        <Text style={styles.commentTime}>2h ago</Text>
+                        <Text style={styles.commentTime}>
+                          {comment.createdAt
+                            ? formatTime(comment.createdAt)
+                            : "Recently"}
+                        </Text>
                       </View>
                       <Text style={styles.commentText}>
-                        {comment.text || "Comment text"}
+                        {comment.comment || "Comment text"}
                       </Text>
                     </View>
                   </View>

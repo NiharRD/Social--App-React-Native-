@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 //Bcrypt is a password hashing library used in Express.js applications to securely store
 // user passwords by converting them into irreversible hash strings, protecting them from unauthorized access even
 // if the database is compromised
@@ -35,7 +36,7 @@ router.post("/login", async (req, res) => {
   const { emailId } = req.body;
   try {
     const user = await User.findOne({ emailId });
-    !user && res.status(200).json({ message: "User not found", status: false });
+    !user && res.status(404).json({ message: "User not found", status: false });
 
     if (user) {
       const ValidPassword = await bcrypt.compare(
@@ -43,11 +44,23 @@ router.post("/login", async (req, res) => {
         user.password
       );
       if (ValidPassword) {
-        res
-          .status(200)
-          .json({ message: "Login Sucessfully", status: true, data: user });
+        const token = jwt.sign(
+          { userId: user._id, emailId: user.emailId },
+          process.env.SECRET
+        );
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
+        userResponse.token = token;
+
+        res.status(200).json({
+          message: "Login Sucessfully",
+          status: true,
+          token,
+          data: userResponse,
+        });
       } else {
-        res.status(200).json({ message: "Invalid password", status: false });
+        res.status(401).json({ message: "Invalid password", status: false });
       }
     }
   } catch (error) {

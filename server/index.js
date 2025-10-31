@@ -4,12 +4,14 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
+const cors = require("cors");
 const { connect } = require("./connectMonogo");
 const UserRouter = require("./routes/users");
 const AuthRouter = require("./routes/auth");
 const PostsRouter = require("./routes/posts");
 const CommentsRouter = require("./routes/comments");
 dotenv.config();
+app.use(cors());
 
 //middleWares
 

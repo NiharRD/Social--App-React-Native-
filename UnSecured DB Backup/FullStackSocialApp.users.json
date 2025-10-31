@@ -1,0 +1,30 @@
+[{
+  "_id": {
+    "$oid": "68f49357d881b60218cba982"
+  },
+  "userName": "vipul",
+  "emailId": "vipulpussi69@gmail.com",
+  "phoneNo": "9954700000",
+  "password": "$2b$10$9apimXPZTRDyz/cPYx0yJ.wBl7e4aX01JPFNR1dlPr3hEGk2T0epa",
+  "gender": "male",
+  "dob": "1998-05-15",
+  "profilePic": "",
+  "followers": [],
+  "following": [],
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68f722f2f6faaa0162235296"
+  },
+  "userName": "nihar",
+  "emailId": "nihar@gmail.com",
+  "phoneNo": "9954795505",
+  "password": "$2b$10$qaxdk.o40hamB1EgwiDL2.oskcDphb4olN2NMWtG552XAkR0sU60O",
+  "gender": "male",
+  "dob": "1998-05-15",
+  "profilePic": "",
+  "followers": [],
+  "following": [],
+  "__v": 0
+}]

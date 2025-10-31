@@ -2,9 +2,13 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const verifyToken = require("../middleware/auth");
 // update
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
 
   try {
     if (req.body.password) {
@@ -26,8 +30,11 @@ router.put("/update/:id", async (req, res) => {
 
 //delete user
 
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (req.userId !== id) {
+    return res.status(401).json({ message: "unauthorized", status: false });
+  }
   const UserExists = await User.findById(id);
   if (UserExists) {
     await User.findByIdAndDelete(id).then(() => {
@@ -72,13 +79,33 @@ router.get("/getUser/:id", async (req, res) => {
   }
 });
 
+// is Following
+
+router.get("/isFollowing/:userId", verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = await User.findOne({ _id: req.userId });
+    let isFollowing = false;
+    currentUser.following.map((item) => {
+      if (item.toString() === userId.toString()) isFollowing = true;
+    });
+    res.status(200).json({
+      message: "Following status fetched successfully",
+      status: true,
+      data: isFollowing,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
 // follow user
 
-router.put("/follow/:id", async (req, res) => {
+router.put("/follow/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ _id: id });
-    const currentUser = await User.findOne({ _id: req.body.id });
+    const currentUser = await User.findOne({ _id: req.userId });
 
     let isFollowed = false;
     user.followers.map((item) => {
@@ -122,11 +149,11 @@ router.put("/follow/:id", async (req, res) => {
 
 // unfollow user
 
-router.put("/unfollow/:id", async (req, res) => {
+router.put("/unfollow/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ _id: id });
-    const currentUser = await User.findOne({ _id: req.body.id });
+    const currentUser = await User.findOne({ _id: req.userId });
 
     let isFollowing = false;
     user.followers.map((item) => {
@@ -150,6 +177,23 @@ router.put("/unfollow/:id", async (req, res) => {
         status: true,
         data: res1,
       });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
+router.get("/getOwnProfile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.userId });
+    if (user) {
+      res.status(200).json({
+        message: "User fetched successfully",
+        status: true,
+        data: user,
+      });
+    } else {
+      res.status(404).json({ message: "User not found", status: false });
     }
   } catch (error) {
     res.status(500).json({ message: error.message, status: false });

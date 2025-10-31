@@ -18,10 +18,10 @@ app.use(cors());
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
-
+app.use(express.static("uploads"));
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
-connect(process.env.mongoLocalUrl);
+connect(process.env.mongoUrl);
 app.listen(8080, () => console.log("Server Has Started "));

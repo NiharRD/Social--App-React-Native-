@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
-
+app.use(express.static("uploads"));
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);

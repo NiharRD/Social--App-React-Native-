@@ -11,14 +11,25 @@ const AuthRouter = require("./routes/auth");
 const PostsRouter = require("./routes/posts");
 const CommentsRouter = require("./routes/comments");
 dotenv.config();
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // Allow all origins, or specify your client URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 //middleWares
 
 app.use(express.json());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(morgan("common"));
-app.use(express.static("uploads"));
+//app.use(express.static("uploads"));
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);

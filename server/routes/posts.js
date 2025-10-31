@@ -6,36 +6,82 @@ const upload = require("../middleware/upload");
 const verifyToken = require("../middleware/auth");
 //add posts
 
+// router.post(
+//   "/add",
+//   upload.single("imageUrl"),
+//   verifyToken,
+//   async (req, res) => {
+//     try {
+//       const imageUrl = req.file ? req.file.filename : "";
+//       const { caption } = req.body;
+//       const userId = req.userId;
+//       const user = await User.findById(userId);
+//       if (!user) {
+//         return res
+//           .status(404)
+//           .json({ message: "User not found", status: false });
+//       }
+//       const userName = user.userName;
+
+//       const newPost = await Post.create({
+//         caption,
+//         userId,
+//         userName,
+//         imageUrl,
+//       });
+//       res.status(201).json({
+//         message: "Post added successfully",
+//         status: true,
+//         data: newPost,
+//       });
+//     } catch (error) {
+//       res.status(500).json({ message: error.message, status: false });
+//     }
+//   }
+// );
+
+// cloudnaryt  update
 router.post(
   "/add",
-  upload.single("imageUrl"),
+  upload.single("imageUrl"), // 'imageUrl' matches your FormData field name
   verifyToken,
   async (req, res) => {
     try {
-      const imageUrl = req.file ? req.file.filename : "";
+      // Cloudinary automatically uploads and gives you the URL
+      const imageUrl = req.file ? req.file.path : ""; // Cloudinary URL is in req.file.path
       const { caption } = req.body;
       const userId = req.userId;
+
       const user = await User.findById(userId);
       if (!user) {
-        return res
-          .status(404)
-          .json({ message: "User not found", status: false });
+        return res.status(404).json({
+          status: false,
+          message: "User not found",
+        });
       }
-      const userName = user.userName;
 
-      const newPost = await Post.create({
-        caption,
+      const newPost = new Post({
         userId,
-        userName,
-        imageUrl,
+        caption,
+        imageUrl, // This is now the Cloudinary URL
+        likes: [],
+        comments: [],
       });
+
+      await newPost.save();
+
       res.status(201).json({
-        message: "Post added successfully",
         status: true,
-        data: newPost,
+        message: "Post created successfully",
+        post: newPost,
       });
     } catch (error) {
-      res.status(500).json({ message: error.message, status: false });
+      console.error("Error creating post:", error);
+      res.status(500).json({
+        status: false,
+        message: "Error creating post",
+        error: error.message,
+      });
     }
   }
 );

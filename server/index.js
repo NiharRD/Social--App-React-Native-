@@ -24,4 +24,5 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
 connect(process.env.mongoLocalUrl);
-app.listen(8080, () => console.log("Server Has Started "));
+//app.listen(8080, () => console.log("Server Has Started "));
+module.exports = app;

@@ -20,6 +20,9 @@ app.use(
   })
 );
 
+// Handle preflight
+app.options("*", cors());
+
 //middleWares
 
 app.use(express.json());
@@ -30,10 +33,35 @@ app.use(
 );
 app.use(morgan("common"));
 //app.use(express.static("uploads"));
+
+// Database connection middleware - connect before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await connect(process.env.mongoLocalUrl);
+    next();
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    res.status(500).json({
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
+});
+
+// Health check
+app.get("/", (req, res) => {
+  res.json({
+    message: "API is running",
+    status: true,
+    mongodb:
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  });
+});
+
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
-connect(process.env.mongoLocalUrl);
+
 //app.listen(8080, () => console.log("Server Has Started "));
 module.exports = app;

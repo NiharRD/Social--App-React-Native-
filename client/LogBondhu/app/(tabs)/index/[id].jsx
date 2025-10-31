@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
 import { useAuth } from "../../../utils/authContext";
+import { globalUrl } from "../../../globalUrl";
 const PostDetails = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -26,14 +27,12 @@ const PostDetails = () => {
   const [postUser, setPostUser] = useState(null);
 
   const fetchPost = async () => {
-    const response = await axios.get(
-      `http://10.0.2.2:8080/api/posts/getPost/${id}`
-    );
+    const response = await axios.get(`${globalUrl}/api/posts/getPost/${id}`);
     setPost(response.data.data);
   };
   const fetchComments = async () => {
     const response = await axios.get(
-      `http://10.0.2.2:8080/api/posts/comments/getByPost/${id}`
+      `${globalUrl}/api/posts/comments/getByPost/${id}`
     );
     setComments(response.data.data);
   };
@@ -41,7 +40,7 @@ const PostDetails = () => {
   const addComment = async () => {
     try {
       const response = await axios.post(
-        `http://10.0.2.2:8080/api/posts/comments/add/${id}`,
+        `${globalUrl}/api/posts/comments/add/${id}`,
         {
           comment: commentText,
         },
@@ -63,7 +62,7 @@ const PostDetails = () => {
 
   const fetchPostUser = async (userId) => {
     const response = await axios
-      .get(`http://10.0.2.2:8080/api/users/getUser/${userId} `)
+      .get(`${globalUrl}/api/users/getUser/${userId} `)
       .then((res) => {
         setPostUser(res.data.data);
       })
@@ -74,7 +73,7 @@ const PostDetails = () => {
 
   async function getFollowingStatus(userId) {
     await axios
-      .get(`http://10.0.2.2:8080/api/users/isFollowing/${userId}`, {
+      .get(`${globalUrl}/api/users/isFollowing/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -91,7 +90,7 @@ const PostDetails = () => {
     try {
       const response = await axios
         .put(
-          `http://10.0.2.2:8080/api/posts/like/${id}`,
+          `${globalUrl}/api/posts/like/${id}`,
           {},
           {
             headers: {
@@ -112,7 +111,7 @@ const PostDetails = () => {
   const followUser = async (userId) => {
     try {
       const response = await axios.put(
-        `http://10.0.2.2:8080/api/users/follow/${userId}`,
+        `${globalUrl}/api/users/follow/${userId}`,
         {},
         {
           headers: {
@@ -276,10 +275,7 @@ const PostDetails = () => {
               <View style={styles.imageContainer}>
                 <Image
                   source={{
-                    uri: `http://10.0.2.2:8080/${post.imageUrl.replace(
-                      /\\/g,
-                      "/"
-                    )}`,
+                    uri: post.imageUrl, // Cloudinary URL is already complete
                   }}
                   style={styles.image}
                   resizeMode="cover"

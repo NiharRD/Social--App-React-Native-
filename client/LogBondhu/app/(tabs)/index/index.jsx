@@ -15,6 +15,7 @@ import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
 import PostCard from "../../../components/posts/PostCard";
 import { useFocusEffect } from "expo-router";
+import { globalUrl } from "../../../globalUrl";
 
 const HomeScreen = () => {
   const [posts, setPosts] = useState([]);
@@ -22,7 +23,7 @@ const HomeScreen = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get("http://10.0.2.2:8080/api/posts/get");
+      const response = await axios.get(`${globalUrl}/api/posts/get`);
       setPosts(response.data.data);
       setLoading(false);
       console.log("posts", response.data.data);

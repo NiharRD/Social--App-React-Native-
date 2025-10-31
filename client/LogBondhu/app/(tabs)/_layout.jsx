@@ -5,20 +5,18 @@ import Feather from "@expo/vector-icons/Feather";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../utils/authContext";
+import { globalUrl } from "../../globalUrl";
 
 const _layout = () => {
   const { token, setUserData } = useAuth();
 
   useEffect(() => {
     const fetchUser = async () => {
-      const response = await axios.get(
-        "http://10.0.2.2:8080/api/users/getOwnProfile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${globalUrl}/api/users/getOwnProfile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setUserData(response.data.data);
       console.log("userData form layout", response.data.data);
     };

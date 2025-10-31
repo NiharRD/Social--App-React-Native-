@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { useAuth } from "../utils/authContext";
+import { globalUrl } from "../globalUrl";
 const LogIn = () => {
   const { login } = useAuth();
   const router = useRouter();
@@ -36,11 +37,9 @@ const LogIn = () => {
     }
 
     // Here you would typically make an API call to authenticate the user
-    const API_BASE_URL = "http://10.0.2.2:8080";
-
     console.log("Login Data:", formData);
     try {
-      const response = await axios.post("http://10.0.2.2:8080/api/auth/login", {
+      const response = await axios.post(`${globalUrl}/api/auth/login`, {
         emailId: formData.email,
         password: formData.password,
       });

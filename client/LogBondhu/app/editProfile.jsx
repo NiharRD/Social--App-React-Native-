@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
 import { useAuth } from "../utils/authContext";
 import axios from "axios";
+import { globalUrl } from "../globalUrl";
 const EditProfile = () => {
   const router = useRouter();
   const { userData } = useAuth();
@@ -34,7 +35,7 @@ const EditProfile = () => {
 
   async function handleSaveChanges() {
     const response = await axios.put(
-      `http://10.0.2.2:8080/api/users/update/${userData._id}`,
+      `${globalUrl}/api/users/update/${userData._id}`,
       formData,
       {
         headers: {

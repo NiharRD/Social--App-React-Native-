@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
+import { globalUrl } from "../globalUrl";
 
 const SignUp = () => {
   const router = useRouter();
@@ -31,7 +32,6 @@ const SignUp = () => {
       [field]: value,
     }));
   };
-  const API_BASE_URL = "http://10.0.2.2:8080";
 
   const handleSubmit = async () => {
     // Basic validation
@@ -49,17 +49,14 @@ const SignUp = () => {
 
     // Here you would typically make an API call to register the user
     console.log("Form Data:", formData);
-    const response = await axios.post(
-      "http://10.0.2.2:8080/api/auth/register",
-      {
-        userName: formData.userName,
-        emailId: formData.emailId,
-        phoneNo: formData.phoneNo,
-        password: formData.password,
-        gender: formData.gender,
-        dob: formData.dob,
-      }
-    );
+    const response = await axios.post(`${globalUrl}/api/auth/register`, {
+      userName: formData.userName,
+      emailId: formData.emailId,
+      phoneNo: formData.phoneNo,
+      password: formData.password,
+      gender: formData.gender,
+      dob: formData.dob,
+    });
     if (response.status === 201) {
       Alert.alert("Success", "Account created successfully!");
       router.navigate("/LogIn");

@@ -66,7 +66,7 @@ const PostCard = ({ post }) => {
         <View style={styles.imageContainer}>
           <Image
             source={{
-              uri: `http://10.0.2.2:8080/${post.imageUrl.replace(/\\/g, "/")}`,
+              uri: post.imageUrl, // Cloudinary URL is already complete
             }}
             style={styles.image}
             resizeMode="cover"

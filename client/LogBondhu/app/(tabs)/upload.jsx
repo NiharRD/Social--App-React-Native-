@@ -18,6 +18,7 @@ import Feather from "@expo/vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { useAuth } from "../../utils/authContext";
+import { globalUrl } from "../../globalUrl";
 const Upload = () => {
   const router = useRouter();
   const [caption, setCaption] = useState("");
@@ -43,7 +44,7 @@ const Upload = () => {
         });
 
         const response = await axios.post(
-          "http://10.0.2.2:8080/api/posts/add",
+          `${globalUrl}/api/posts/add`,
           formData,
           {
             headers: {

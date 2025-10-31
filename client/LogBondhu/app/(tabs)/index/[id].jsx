@@ -14,13 +14,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
-
+import { useAuth } from "../../../utils/authContext";
 const PostDetails = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { token } = useAuth();
   const [post, setPost] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [postUser, setPostUser] = useState(null);
 
   const fetchPost = async () => {
     const response = await axios.get(
@@ -35,10 +38,116 @@ const PostDetails = () => {
     setComments(response.data.data);
   };
 
+  const addComment = async () => {
+    try {
+      const response = await axios.post(
+        `http://10.0.2.2:8080/api/posts/comments/add/${id}`,
+        {
+          comment: commentText,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.message === "Comment added successfully") {
+        console.log("Comment added successfully");
+        fetchComments();
+        setCommentText("");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchPostUser = async (userId) => {
+    const response = await axios
+      .get(`http://10.0.2.2:8080/api/users/getUser/${userId} `)
+      .then((res) => {
+        setPostUser(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  async function getFollowingStatus(userId) {
+    await axios
+      .get(`http://10.0.2.2:8080/api/users/isFollowing/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setIsFollowing(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  const likePost = async () => {
+    try {
+      const response = await axios
+        .put(
+          `http://10.0.2.2:8080/api/posts/like/${id}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        .then((res) => {
+          if (res.data.message === "Post liked successfully") {
+            console.log("Post liked successfully");
+          }
+        });
+    } catch (error) {
+      console.log("Error liking post:", error);
+    }
+  };
+
+  const followUser = async (userId) => {
+    try {
+      const response = await axios.put(
+        `http://10.0.2.2:8080/api/users/follow/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Toggle the following state
+        setIsFollowing(!isFollowing);
+        // Refresh user data to get updated follower count
+        fetchPostUser(userId);
+      }
+    } catch (err) {
+      console.log("Error following/unfollowing user:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPost();
     fetchComments();
-  }, []);
+  }, [id, likePost]);
+
+  useEffect(() => {
+    if (post && post.userId) {
+      fetchPostUser(post.userId);
+    }
+  }, [post, likePost]);
+
+  useEffect(() => {
+    if (postUser && postUser._id && token) {
+      getFollowingStatus(postUser._id);
+    }
+  }, [postUser, token, likePost]);
 
   // Format time
   const formatTime = (timestamp) => {
@@ -82,9 +191,7 @@ const PostDetails = () => {
             <Feather name="arrow-left" size={24} color="#ffffff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Post</Text>
-          <TouchableOpacity style={styles.moreButton}>
-            <Feather name="more-vertical" size={24} color="#ffffff" />
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.moreButton}></TouchableOpacity>
         </View>
 
         <ScrollView
@@ -92,6 +199,60 @@ const PostDetails = () => {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          {/* Follow/Unfollow Section */}
+          {postUser && (
+            <View style={styles.followSection}>
+              <View style={styles.followUserInfo}>
+                <View style={styles.followAvatar}>
+                  <Feather name="user" size={32} color="#64748b" />
+                </View>
+                <View style={styles.followUserDetails}>
+                  <Text style={styles.followUserName}>
+                    {postUser.userName || "User"}
+                  </Text>
+                  <View style={styles.followStats}>
+                    <View style={styles.followStatItem}>
+                      <Text style={styles.followStatNumber}>
+                        {postUser.followers?.length || 0}
+                      </Text>
+                      <Text style={styles.followStatLabel}>Followers</Text>
+                    </View>
+                    <View style={styles.followStatDivider} />
+                    <View style={styles.followStatItem}>
+                      <Text style={styles.followStatNumber}>
+                        {postUser.following?.length || 0}
+                      </Text>
+                      <Text style={styles.followStatLabel}>Following</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Follow/Unfollow Button */}
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  isFollowing && styles.unfollowButton,
+                ]}
+                onPress={() => followUser(postUser._id)}
+              >
+                <Feather
+                  name={isFollowing ? "user-check" : "user-plus"}
+                  size={18}
+                  color={isFollowing ? "#94a3b8" : "#ffffff"}
+                />
+                <Text
+                  style={[
+                    styles.followButtonText,
+                    isFollowing && styles.unfollowButtonText,
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Post Card */}
           <View style={styles.postCard}>
             {/* User Info */}
@@ -128,13 +289,13 @@ const PostDetails = () => {
 
             {/* Stats */}
             <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
+              <TouchableOpacity style={styles.statItem} onPress={likePost}>
                 <Feather name="heart" size={20} color="#64748b" />
                 <Text style={styles.statText}>
                   {post.likes?.length || 0}{" "}
                   {post.likes?.length === 1 ? "like" : "likes"}
                 </Text>
-              </View>
+              </TouchableOpacity>
               <View style={styles.statItem}>
                 <Feather name="message-circle" size={20} color="#64748b" />
                 <Text style={styles.statText}>
@@ -165,7 +326,10 @@ const PostDetails = () => {
                   onChangeText={setCommentText}
                   multiline
                 />
-                <TouchableOpacity style={styles.sendButton}>
+                <TouchableOpacity
+                  style={styles.sendButton}
+                  onPress={addComment}
+                >
                   <Feather name="send" size={20} color="#3b82f6" />
                 </TouchableOpacity>
               </View>
@@ -437,5 +601,95 @@ const styles = StyleSheet.create({
   noCommentsSubtext: {
     fontSize: 14,
     color: "#64748b",
+  },
+  // Follow/Unfollow Section Styles
+  followSection: {
+    backgroundColor: "#1e293b",
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  followUserInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  followAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#0f172a",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#334155",
+    marginRight: 16,
+  },
+  followUserDetails: {
+    flex: 1,
+  },
+  followUserName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 10,
+  },
+  followStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  followStatItem: {
+    alignItems: "center",
+  },
+  followStatNumber: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 2,
+  },
+  followStatLabel: {
+    fontSize: 12,
+    color: "#64748b",
+  },
+  followStatDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: "#334155",
+  },
+  followButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#3b82f6",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    gap: 8,
+    shadowColor: "#3b82f6",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  followButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
+  unfollowButton: {
+    backgroundColor: "#0f172a",
+    borderWidth: 1.5,
+    borderColor: "#334155",
+    shadowColor: "transparent",
+  },
+  unfollowButtonText: {
+    color: "#94a3b8",
   },
 });

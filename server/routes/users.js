@@ -79,6 +79,26 @@ router.get("/getUser/:id", async (req, res) => {
   }
 });
 
+// is Following
+
+router.get("/isFollowing/:userId", verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = await User.findOne({ _id: req.userId });
+    let isFollowing = false;
+    currentUser.following.map((item) => {
+      if (item.toString() === userId.toString()) isFollowing = true;
+    });
+    res.status(200).json({
+      message: "Following status fetched successfully",
+      status: true,
+      data: isFollowing,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message, status: false });
+  }
+});
+
 // follow user
 
 router.put("/follow/:id", verifyToken, async (req, res) => {

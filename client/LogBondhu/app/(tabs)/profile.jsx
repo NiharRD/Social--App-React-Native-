@@ -84,7 +84,10 @@ const Profile = () => {
 
           {/* Action Buttons */}
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity style={styles.primaryActionButton}>
+            <TouchableOpacity
+              style={styles.primaryActionButton}
+              onPress={() => router.push("/editProfile")}
+            >
               <Feather name="edit-2" size={18} color="#ffffff" />
               <Text style={styles.primaryActionText}>Edit Profile</Text>
             </TouchableOpacity>

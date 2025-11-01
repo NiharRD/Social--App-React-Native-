@@ -11,6 +11,11 @@ const AuthRouter = require("./routes/auth");
 const PostsRouter = require("./routes/posts");
 const CommentsRouter = require("./routes/comments");
 dotenv.config();
+
+connect(process.env.mongoLocalUrl).catch((err) => {
+  console.error("Initial MongoDB connection failed:", err);
+});
+
 app.use(
   cors({
     origin: "*", // Allow all origins, or specify your client URL
@@ -33,20 +38,6 @@ app.use(
 );
 app.use(morgan("common"));
 //app.use(express.static("uploads"));
-
-// Database connection middleware - connect before handling requests
-app.use(async (req, res, next) => {
-  try {
-    await connect(process.env.mongoLocalUrl);
-    next();
-  } catch (error) {
-    console.error("Database connection failed:", error);
-    res.status(500).json({
-      message: "Database connection failed",
-      error: error.message,
-    });
-  }
-});
 
 // Health check
 app.get("/", (req, res) => {

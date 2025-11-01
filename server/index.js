@@ -11,6 +11,7 @@ const AuthRouter = require("./routes/auth");
 const PostsRouter = require("./routes/posts");
 const CommentsRouter = require("./routes/comments");
 dotenv.config();
+const PORT = process.env.PORT || 5000;
 app.use(cors());
 
 //middleWares
@@ -24,4 +25,4 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
 connect(process.env.mongoUrl);
-app.listen(8080, () => console.log("Server Has Started "));
+app.listen(PORT, () => console.log("Server Has Started "));

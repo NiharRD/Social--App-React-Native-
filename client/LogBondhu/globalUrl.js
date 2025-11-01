@@ -1,1 +1,1 @@
-export const globalUrl = "https://social-app-server.vercel.app";
+export const globalUrl = "https://social-app-react-native.vercel.app";

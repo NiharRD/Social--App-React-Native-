@@ -66,6 +66,7 @@ router.post(
         imageUrl, // This is now the Cloudinary URL
         likes: [],
         comments: [],
+        userName: user.userName,
       });
 
       await newPost.save();

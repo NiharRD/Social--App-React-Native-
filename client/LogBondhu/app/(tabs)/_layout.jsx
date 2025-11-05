@@ -71,6 +71,15 @@ const _layout = () => {
           ),
         }}
       />
+      <Tabs.Screen
+        name="imageUploader"
+        options={{
+          title: "Image Uploader",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="upload" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 };

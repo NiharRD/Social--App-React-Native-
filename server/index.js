@@ -1,7 +1,16 @@
+const dotenv = require("dotenv");
+dotenv.config();
+// require("dotenv").config();
+// console.log("ENV CHECK:", {
+//   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "MISSING",
+//   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "MISSING",
+//   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET
+//     ? "***SET"
+//     : "MISSING",
+// });
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
-const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -10,7 +19,7 @@ const UserRouter = require("./routes/users");
 const AuthRouter = require("./routes/auth");
 const PostsRouter = require("./routes/posts");
 const CommentsRouter = require("./routes/comments");
-dotenv.config();
+const ImageUploadRouter = require("./routes/imageUpload");
 
 connect(process.env.mongoLocalUrl).catch((err) => {
   console.error("Initial MongoDB connection failed:", err);
@@ -53,6 +62,10 @@ app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
+app.use("/api/images", ImageUploadRouter);
 
-//app.listen(8080, () => console.log("Server Has Started "));
-module.exports = app;
+app.listen(process.env.PORT || 8080, () =>
+  console.log(`Server Has Started on port ${process.env.PORT || 8080}`)
+);
+
+// module.exports = app;

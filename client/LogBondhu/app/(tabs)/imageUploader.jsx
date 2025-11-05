@@ -7,6 +7,8 @@ import {
   StatusBar,
   Image,
   Platform,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,6 +28,8 @@ const imageUploader = () => {
   const [quality, setQuality] = useState(80);
   const [downloadUrls, setDownloadUrls] = useState([]);
   const [jsonData, setJsonData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const presets = [
     { value: "instagram", label: "Instagram", dimensions: "1080x1080" },
@@ -53,6 +57,9 @@ const imageUploader = () => {
   };
 
   const uploadImages = async () => {
+    setIsLoading(true);
+    setLoadingMessage("Uploading and processing images...");
+
     try {
       // Create FormData
       const formData = new FormData();
@@ -100,13 +107,20 @@ const imageUploader = () => {
     } catch (error) {
       console.error("Upload error:", error.response?.data || error.message);
       alert("Upload failed: " + (error.response?.data?.error || error.message));
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage("");
     }
   };
 
   const downloadAsZip = async () => {
+    setIsLoading(true);
+    setLoadingMessage("Creating ZIP file...");
+
     try {
       if (!downloadUrls || downloadUrls.length === 0) {
         alert("No images to download");
+        setIsLoading(false);
         return;
       }
 
@@ -174,6 +188,9 @@ const imageUploader = () => {
     } catch (error) {
       console.error("Download error:", error);
       alert("Failed to download ZIP: " + error.message);
+    } finally {
+      setIsLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -391,6 +408,21 @@ const imageUploader = () => {
           )}
         </ScrollView>
       </LinearGradient>
+
+      {/* Loading Overlay */}
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text style={styles.loadingText}>{loadingMessage}</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -667,6 +699,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     minWidth: 40,
+    textAlign: "center",
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    backgroundColor: "#1e293b",
+    borderRadius: 16,
+    padding: 32,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#334155",
+    minWidth: 200,
+  },
+  loadingText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 16,
     textAlign: "center",
   },
 });

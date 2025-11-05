@@ -6,6 +6,7 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  Platform,
 } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
 import Slider from "@react-native-community/slider";
+import { File, Paths } from "expo-file-system/next";
+import * as Sharing from "expo-sharing";
 import axios from "axios";
 import { globalUrl } from "../../globalUrl";
 const imageUploader = () => {
@@ -90,12 +93,87 @@ const imageUploader = () => {
         // Extract URLs for download
         const urls = response.data.images.map((img) => img.url);
         setDownloadUrls(urls);
+        console.log("downloadUrls", urls);
 
         console.log("Upload successful:", response.data);
       }
     } catch (error) {
       console.error("Upload error:", error.response?.data || error.message);
       alert("Upload failed: " + (error.response?.data?.error || error.message));
+    }
+  };
+
+  const downloadAsZip = async () => {
+    try {
+      if (!downloadUrls || downloadUrls.length === 0) {
+        alert("No images to download");
+        return;
+      }
+
+      console.log("Downloading ZIP file...");
+
+      // Create a unique filename
+      const filename = `processed-images-${Date.now()}.zip`;
+
+      // Create file reference in document directory (permanent storage)
+      const file = new File(Paths.document, filename);
+
+      // Make POST request to server to get ZIP
+      const response = await fetch(`${localUrl}/api/images/download-zip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ urls: downloadUrls }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download ZIP file from server");
+      }
+
+      // Get response as base64 string (expo-file-system needs base64 or string)
+      const reader = new FileReader();
+      const blob = await response.blob();
+
+      const base64String = await new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64 = reader.result.split(",")[1]; // Remove data:application/zip;base64, prefix
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Create the file and write base64 data
+      await file.create();
+      await file.write(base64String, { encoding: "base64" });
+
+      console.log("ZIP file saved to:", file.uri);
+
+      // Share/Save the file - this will allow saving to Downloads
+      if (await Sharing.isAvailableAsync()) {
+        const result = await Sharing.shareAsync(file.uri, {
+          mimeType: "application/zip",
+          dialogTitle: "Save ZIP to Downloads",
+          UTI: "public.zip-archive",
+        });
+
+        console.log("File shared successfully", result);
+
+        // On Android, suggest saving to Downloads
+        if (Platform.OS === "android") {
+          alert(
+            "To save to Downloads: Select 'Save to Files' and choose Downloads folder"
+          );
+        } else {
+          alert("ZIP file saved! Use 'Save to Files' to save to Downloads.");
+        }
+      } else {
+        alert("ZIP file saved to: " + file.uri);
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Failed to download ZIP: " + error.message);
     }
   };
 
@@ -273,7 +351,7 @@ const imageUploader = () => {
               styles.downloadButton,
               !jsonData && styles.downloadButtonDisabled,
             ]}
-            onPress={() => {}}
+            onPress={downloadAsZip}
             disabled={!jsonData}
           >
             <Feather

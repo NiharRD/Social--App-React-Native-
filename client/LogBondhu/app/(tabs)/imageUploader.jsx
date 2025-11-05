@@ -84,7 +84,7 @@ const imageUploader = () => {
 
       // Send request
       const response = await axios.post(
-        `${localUrl}/api/images/process`,
+        `${globalUrl}/api/images/process`,
         formData,
         {
           headers: {
@@ -133,7 +133,7 @@ const imageUploader = () => {
       const file = new File(Paths.document, filename);
 
       // Make POST request to server to get ZIP
-      const response = await fetch(`${localUrl}/api/images/download-zip`, {
+      const response = await fetch(`${globalUrl}/api/images/download-zip`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

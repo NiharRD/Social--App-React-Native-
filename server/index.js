@@ -64,8 +64,8 @@ app.use("/api/posts", PostsRouter);
 app.use("/api/posts/comments", CommentsRouter);
 app.use("/api/images", ImageUploadRouter);
 
-app.listen(process.env.PORT || 8080, () =>
-  console.log(`Server Has Started on port ${process.env.PORT || 8080}`)
-);
+// app.listen(process.env.PORT || 8080, () =>
+//   console.log(`Server Has Started on port ${process.env.PORT || 8080}`)
+// );
 
-// module.exports = app;
+module.exports = app;

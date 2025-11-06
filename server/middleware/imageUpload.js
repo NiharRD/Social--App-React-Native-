@@ -2,7 +2,7 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 
-// Storage for original uploads (before processing)
+// Cloodinary storage for storing original buffer image  without transforming it
 const originalStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -11,13 +11,12 @@ const originalStorage = new CloudinaryStorage({
     public_id: (req, file) => {
       return `original-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     },
-    // Don't transform originals, keep as-is
+
     resource_type: "auto",
   },
 });
 
-// Storage for processed images with transformations
-// This function returns a storage that can read quality from req at runtime
+//  Cloudinary Storage for Storing processed images with dimensions and quality transformation
 const getProcessedStorage = (preset) => {
   const presetDimensions = {
     instagram: { width: 1080, height: 1080 },
@@ -30,7 +29,7 @@ const getProcessedStorage = (preset) => {
   return new CloudinaryStorage({
     cloudinary: cloudinary,
     params: (req, file) => {
-      // Read quality from req.processQuality (set by validateQuality middleware)
+      // quality needed from client side
       const quality = req.processQuality || 80;
 
       return {
@@ -40,11 +39,11 @@ const getProcessedStorage = (preset) => {
         transformation: [
           {
             width: dimensions.width,
-            height: dimensions.height,
+            height: dimensions.height, // giving width and height as param for quality transformation
             crop: "fill",
             gravity: "auto",
           },
-          { quality: quality }, // Dynamic quality from request
+          { quality: quality }, // giving quality as a param for the transformation  to the quality object
           { fetch_format: "auto" },
         ],
       };
@@ -52,12 +51,12 @@ const getProcessedStorage = (preset) => {
   });
 };
 
-// Middleware for uploading multiple original images
+// main middle ware to upload orignasl image to cloudinary for them to be processed
 const uploadOriginals = multer({
   storage: originalStorage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
-    files: 20, // Max 20 files at once
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file  , recommended by GPT :(
+    files: 20, // Max 20 files at once   - recommended by GPT :(
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
@@ -66,9 +65,9 @@ const uploadOriginals = multer({
       cb(new Error("Only image files are allowed!"), false);
     }
   },
-}).array("images", 20); // Accept multiple files with field name "images"
+}).array("images", 20); // Accept multiple files with form  name images
 
-// Helper function to upload processed image to Cloudinary
+// 2nd main function to process image based on quality and preset /resolution
 const uploadProcessedImage = async (buffer, preset, quality, originalName) => {
   const presetDimensions = {
     instagram: { width: 1080, height: 1080 },
@@ -79,6 +78,8 @@ const uploadProcessedImage = async (buffer, preset, quality, originalName) => {
   const dimensions = presetDimensions[preset] || { width: 1080, height: 1080 };
 
   return new Promise((resolve, reject) => {
+    // upload stream is used for  directly uploading cloudinary images  again to cloundinay
+    // without storing it to disk again
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `image-resizer/${preset}`,

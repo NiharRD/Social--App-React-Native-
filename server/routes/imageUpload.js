@@ -9,12 +9,9 @@ const {
 } = require("../middleware/imageUpload");
 const archiver = require("archiver");
 const axios = require("axios");
-const streamifier = require("streamifier");
 
 // Route 1: Upload and process images with preset and quality
-// POST /api/images/process
-// Body: { preset: 'instagram'|'story'|'twitter', quality: 60-100 }
-// FormData: images (multiple files)
+// FormData: images (multiple files) , preset -> instagram ,twitter as string
 router.post(
   "/process",
   uploadOriginals,
@@ -27,15 +24,16 @@ router.post(
       }
 
       const { preset = "instagram" } = req.body;
-      const quality = req.processQuality; // Set by validateQuality middleware
+      const quality = req.processQuality; // qualiy from client side process by valdation middle waree
 
       const processedResults = [];
 
-      // Process each uploaded image
+      // prcoessing orignal  images uploaded   for be processed /transformed  from the request
+
       for (const file of req.files) {
         const originalSize = file.size;
 
-        // Download the original from Cloudinary to get buffer
+        // storing in buffer each of the uploaded orignal imagww to process
         const response = await axios.get(file.path, {
           responseType: "arraybuffer",
         });
@@ -48,7 +46,7 @@ router.post(
           quality,
           file.originalname
         );
-
+        // after processing storing the results in the processedResults array
         processedResults.push({
           originalFileName: file.originalname,
           originalSize: originalSize,
@@ -66,7 +64,7 @@ router.post(
           format: processed.format,
         });
       }
-
+      // client side to  save data in order to provide urls for further downloads
       res.json({
         success: true,
         message: `${processedResults.length} images processed successfully`,
@@ -94,8 +92,7 @@ router.post(
   }
 );
 
-// Route 2: Download processed images as ZIP
-// POST /api/images/download-zip
+// Route 2: Download processed images as ZIP  using  archive  module
 // Body: { urls: [array of cloudinary URLs] }
 router.post("/download-zip", async (req, res) => {
   try {
@@ -105,7 +102,7 @@ router.post("/download-zip", async (req, res) => {
       return res.status(400).json({ error: "No image URLs provided" });
     }
 
-    // Set response headers for ZIP download
+    // Setting response headers so that dowload can be done after calling the api as ZIP
     res.setHeader("Content-Type", "application/zip");
     res.setHeader(
       "Content-Disposition",
@@ -119,20 +116,20 @@ router.post("/download-zip", async (req, res) => {
       throw err;
     });
 
-    // Pipe archive to response
+    // Pipe archive to response  - GPT kiya hu
     archive.pipe(res);
 
     // Download each image and add to ZIP
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
-      const response = await axios.get(url, { responseType: "arraybuffer" });
+      const response = await axios.get(url, { responseType: "arraybuffer" }); // downloading each image from the url and storing in buffer
       const buffer = Buffer.from(response.data);
 
       // Extract filename from URL or create one
       const filename =
         url.split("/").pop().split("?")[0] || `image-${i + 1}.jpg`;
 
-      archive.append(buffer, { name: filename });
+      archive.append(buffer, { name: filename }); // appededing thorgh looping in the archive
     }
 
     // Finalize the archive
@@ -145,121 +142,6 @@ router.post("/download-zip", async (req, res) => {
         details: error.message,
       });
     }
-  }
-});
-
-// Route 3: Process multiple images with different presets
-// POST /api/images/batch-process
-// Body: { quality: 60-100, presets: ['instagram', 'story', 'twitter'] }
-// FormData: images (multiple files)
-router.post(
-  "/batch-process",
-  uploadOriginals,
-  validateQuality,
-  async (req, res) => {
-    try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: "No images uploaded" });
-      }
-
-      const { presets = ["instagram"] } = req.body;
-      const presetsArray = Array.isArray(presets) ? presets : [presets];
-      const quality = req.processQuality;
-
-      const allProcessedResults = [];
-
-      // Process each image with each preset
-      for (const file of req.files) {
-        const originalSize = file.size;
-
-        // Download the original
-        const response = await axios.get(file.path, {
-          responseType: "arraybuffer",
-        });
-        const buffer = Buffer.from(response.data);
-
-        const fileResults = {
-          originalFileName: file.originalname,
-          originalSize: originalSize,
-          processedVersions: [],
-        };
-
-        // Process with each preset
-        for (const preset of presetsArray) {
-          const processed = await uploadProcessedImage(
-            buffer,
-            preset,
-            quality,
-            file.originalname
-          );
-
-          fileResults.processedVersions.push({
-            preset: preset,
-            newSize: processed.bytes,
-            dimensions: { width: processed.width, height: processed.height },
-            url: processed.url,
-            publicId: processed.publicId,
-            format: processed.format,
-          });
-        }
-
-        allProcessedResults.push(fileResults);
-      }
-
-      res.json({
-        success: true,
-        message: `${allProcessedResults.length} images processed with ${presetsArray.length} preset(s) each`,
-        results: allProcessedResults,
-        quality: quality,
-        presets: presetsArray,
-      });
-    } catch (error) {
-      console.error("Batch processing error:", error);
-      res.status(500).json({
-        error: "Failed to batch process images",
-        details: error.message,
-      });
-    }
-  }
-);
-
-// Route 4: Get image metrics (without re-processing)
-// POST /api/images/metrics
-// Body: { originalUrl, processedUrl }
-router.post("/metrics", async (req, res) => {
-  try {
-    const { originalUrl, processedUrl } = req.body;
-
-    if (!originalUrl || !processedUrl) {
-      return res
-        .status(400)
-        .json({ error: "Both originalUrl and processedUrl are required" });
-    }
-
-    // Get file sizes
-    const [originalRes, processedRes] = await Promise.all([
-      axios.head(originalUrl),
-      axios.head(processedUrl),
-    ]);
-
-    const originalSize = parseInt(originalRes.headers["content-length"]);
-    const newSize = parseInt(processedRes.headers["content-length"]);
-    const savings = originalSize - newSize;
-    const savingsPercent = ((savings / originalSize) * 100).toFixed(2);
-
-    res.json({
-      originalSize,
-      newSize,
-      savings,
-      savingsPercent: savingsPercent + "%",
-      compressionRatio: ((newSize / originalSize) * 100).toFixed(2) + "%",
-    });
-  } catch (error) {
-    console.error("Metrics error:", error);
-    res.status(500).json({
-      error: "Failed to get image metrics",
-      details: error.message,
-    });
   }
 });
 
